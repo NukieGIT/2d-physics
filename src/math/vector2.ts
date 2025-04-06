@@ -45,8 +45,8 @@ export class Vector2 {
 		return this.divide(length)
 	}
 
-	static fromAngle(angle: number): Vector2 {
-		return new Vector2(Math.cos(angle), Math.sin(angle))
+	static fromAngle(theta: number): Vector2 {
+		return new Vector2(Math.cos(theta), Math.sin(theta))
 	}
 
 	static distance(a: Vector2, b: Vector2): number {
@@ -68,10 +68,9 @@ export class Vector2 {
 		return Math.acos(dot / (lengthA * lengthB))
 	}
 
-	// TODO: check how this works lmao
-	static rotate(vector: Vector2, angle: number): Vector2 {
-		const cos = Math.cos(angle)
-		const sin = Math.sin(angle)
+	static rotate(vector: Vector2, theta: number): Vector2 {
+		const cos = Math.cos(theta)
+		const sin = Math.sin(theta)
 		return new Vector2(vector.x * cos - vector.y * sin, vector.x * sin + vector.y * cos)
 	}
 

@@ -1,8 +1,6 @@
-// TODO: panning and zooming (most likely)
-// TODO: text rendering order "layers"
-
 import { IRendererTick } from "./loop"
 
+// TODO: panning and zooming (most likely)
 export class Renderer implements IRendererTick {
     private canvas: HTMLCanvasElement
     private _ctx?: CanvasRenderingContext2D | undefined
@@ -11,7 +9,7 @@ export class Renderer implements IRendererTick {
     private _height: number = 0
 
     protected _drawables: IDrawable[] = []
-    private _areDrawablesDirty: boolean = true
+    private _isDrawableOrderDirty: boolean = true
 
     public get width(): number {
         return this._width
@@ -31,7 +29,7 @@ export class Renderer implements IRendererTick {
     public addDrawable(drawable: IDrawable): number {
         const idx = this._drawables.length - 1
         this._drawables.push(drawable)
-        this.makeDrawablesDirty()
+        this.makeDrawableOrderDirty()
         return idx
     }
 
@@ -39,19 +37,19 @@ export class Renderer implements IRendererTick {
         const index = this._drawables.indexOf(drawable)
         if (index !== -1) {
             this._drawables.splice(index, 1)
-            this.makeDrawablesDirty()
+            this.makeDrawableOrderDirty()
         }
     }
 
     public removeDrawableByIndex(index: number): void {
         if (index >= 0 && index < this._drawables.length) {
             this._drawables.splice(index, 1)
-            this.makeDrawablesDirty()
+            this.makeDrawableOrderDirty()
         }
     }
 
-    private makeDrawablesDirty() {
-        this._areDrawablesDirty = true
+    private makeDrawableOrderDirty() {
+        this._isDrawableOrderDirty = true
     }
 
     protected get canvasElement(): HTMLCanvasElement {
@@ -73,9 +71,9 @@ export class Renderer implements IRendererTick {
 
     public tick(): void {
         this.clear()
-        if (this._areDrawablesDirty) {
+        if (this._isDrawableOrderDirty) {
             this._drawables.sort((a, b) => b.layer - a.layer)
-            this._areDrawablesDirty = false
+            this._isDrawableOrderDirty = false
         }
 
         for (const drawable of this._drawables) {

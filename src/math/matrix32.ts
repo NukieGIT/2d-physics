@@ -102,7 +102,7 @@ export class Matrix32 {
     public static identity(): Matrix32 {
         return new Matrix32(1, 0, 0, 1, 0, 0);
     }
-    
+
     constructor(a: number, b: number, c: number, d: number, tx: number, ty: number) {
         this._a = a;
         this._b = b;
@@ -126,15 +126,23 @@ export class Matrix32 {
     }
 
     public multiplyBy(m: Matrix32): Matrix32 {
-        this._a = this._a * m._a + this._b * m._c
-        this._b = this._a * m._b + this._b * m._d
-        this._c = this._c * m._a + this._d * m._c
-        this._d = this._c * m._b + this._d * m._d
-        this._tx = this._tx * m._a + this._ty * m._c + m._tx
-        this._ty = this._tx * m._b + this._ty * m._d + m._ty
+        const a = this._a;
+        const b = this._b;
+        const c = this._c;
+        const d = this._d;
+        const tx = this._tx;
+        const ty = this._ty;
+
+        this._a = a * m._a + b * m._c
+        this._b = a * m._b + b * m._d
+        this._c = c * m._a + d * m._c
+        this._d = c * m._b + d * m._d
+        this._tx = tx * m._a + ty * m._c + m._tx
+        this._ty = tx * m._b + ty * m._d + m._ty
 
         return this;
     }
+
 
     public transformVector(v: Vector3): Vector2 {
         return new Vector2(
@@ -152,9 +160,15 @@ export class Matrix32 {
 
     public scaleBy(v: Vector2): Matrix32 {
         this._a *= v.x;
-        this._b *= v.x;
-        this._c *= v.y;
         this._d *= v.y;
+
+        return this;
+    }
+
+    public rotateByAbout(theta: number, origin: Vector2) : Matrix32 {
+        this.translate(origin.multiply(-1))        
+        this.rotateBy(theta)
+        this.translate(origin)
 
         return this;
     }
@@ -162,18 +176,33 @@ export class Matrix32 {
     public rotateBy(theta: number): Matrix32 {
         const cos = Math.cos(theta);
         const sin = Math.sin(theta);
-        
-        this._a = this._a * cos + this._b * sin;
-        this._b = -this._a * sin + this._b * cos;
-        this._c = this._c * cos + this._d * sin;
-        this._d = -this._c * sin + this._d * cos;
+
+        const a = this._a;
+        const b = this._b;
+        const c = this._c;
+        const d = this._d;
+
+        this._a = a * cos + b * sin;
+        this._b = -a * sin + b * cos;
+        this._c = c * cos + d * sin;
+        this._d = -c * sin + d * cos;
 
         return this;
     }
-    
+
     public skewBy(v: Vector2): Matrix32 {
-        this._b *= v.x;
-        this._c *= v.y;
+        const tanX = Math.tan(v.x);
+        const tanY = Math.tan(v.y);
+
+        const a = this._a;
+        const b = this._b;
+        const c = this._c;
+        const d = this._d;
+    
+        this._a = a + c * tanY;
+        this._b = b + d * tanY;
+        this._c = c + a * tanX;
+        this._d = d + b * tanX;
 
         return this;
     }
@@ -181,7 +210,7 @@ export class Matrix32 {
     // TODO: check how this works lmao
     public inverted(): Matrix32 {
         const det = this._a * this._d - this._b * this._c;
-        if (det === 0) {
+        if (Math.abs(det) < Number.EPSILON) {
             throw new Error("Matrix is not invertible.");
         }
         return new Matrix32(
@@ -198,4 +227,7 @@ export class Matrix32 {
         return `Matrix32\n[${this._a}, ${this._b}, ${this._tx}]\n[${this._c}, ${this._d}, ${this._ty}]`;
     }
 
+    public equals(m: Matrix32): boolean {
+        return this._a === m._a && this._b === m._b && this._c === m._c && this._d === m._d && this._tx === m._tx && this._ty === m._ty;
+    }
 }

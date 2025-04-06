@@ -77,19 +77,19 @@ class TestObject extends CanvasObject {
     public width: number = 100
     public height: number = 100
 
-    private get mouseCenterOffset(): Vector2 {
-        return new Vector2(this.width / 2, this.height / 2)
-    }
+    // private get mouseCenterOffset(): Vector2 {
+    //     return new Vector2(this.width / 2, this.height / 2)
+    // }
 
     public constructor() {
         super()
-        this.transform.position = Vector2.one.multiply(0)
+        this.transform.position = Vector2.one.multiply(200)
     }
 
-    public update(dt: number): void {
-        // this.transform.position = new Vector2(mousePosInCanvas.x, mousePosInCanvas.y)
-        //     .subtract(this.mouseCenterOffset)
-    }
+    // public update(dt: number): void {
+    //     this.transform.position = new Vector2(mousePosInCanvas.x, mousePosInCanvas.y)
+    //         .subtract(this.mouseCenterOffset)
+    // }
 }
 class TestObjectDrawer implements IDrawable {
     private _object: TestObject
@@ -109,31 +109,32 @@ class TestObjectDrawer implements IDrawable {
     }
 
     draw(ctx: CanvasRenderingContext2D): void {
-        const lbv2 = this._object.transform.matrix.translation
-        const rbv2 = this._object.transform.matrix.translation.add(new Vector2(this._object.width, 0))
-        const rtv2 = this._object.transform.matrix.translation.add(new Vector2(this._object.width, this._object.height))
-        const ltv2 = this._object.transform.matrix.translation.add(new Vector2(0, this._object.height))
+        const vertices = [
+            new Vector3(0, 0, 1),
+            new Vector3(this._object.width, 0, 1),
+            new Vector3(this._object.width, this._object.height, 1),
+            new Vector3(0, this._object.height, 1)
+        ];
 
-        const lb = this._object.transform.matrix.transformVector(new Vector3(lbv2.x, lbv2.y, 1))
-        const rb = this._object.transform.matrix.transformVector(new Vector3(rbv2.x, rbv2.y, 1))
-        const rt = this._object.transform.matrix.transformVector(new Vector3(rtv2.x, rtv2.y, 1))
-        const lt = this._object.transform.matrix.transformVector(new Vector3(ltv2.x, ltv2.y, 1))
+        const transformedVertices = vertices.map(v => 
+            this._object.transform.matrix.transformVector(v)
+        );
 
-        ctx.fillStyle = "gray"
-        ctx.beginPath()
+        ctx.fillStyle = "gray";
+        ctx.beginPath();
+        ctx.moveTo(transformedVertices[0].x, transformedVertices[0].y);
+        
+        for (let i = 1; i < transformedVertices.length; i++) {
+            ctx.lineTo(transformedVertices[i].x, transformedVertices[i].y);
+        }
 
-        ctx.moveTo(lb.x, lb.y)
-        ctx.lineTo(rb.x, rb.y)
-        ctx.lineTo(rt.x, rt.y)
-        ctx.lineTo(lt.x, lt.y)
-
-        ctx.closePath()
-        ctx.fill()
-        ctx.fillStyle = "white"
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "white";
         
         this._object.transform.matrix.toString().split("\n").forEach((line, i) => {
-            ctx.fillText(line, lb.x, lb.y + 20 * (i + 1))
-        })
+            ctx.fillText(line, transformedVertices[0].x, transformedVertices[0].y + 20 * (i + 1));
+        });
     }
 }
 
@@ -156,10 +157,18 @@ mainLoop.start()
 
 window.addEventListener("wheel", e => {
     const delta = Math.sign(e.deltaY)
-    if (e.altKey) {
-        testObject.transform.matrix.rotateBy(delta * Math.PI / 180)
+    if (!e.shiftKey) {
+        testObject.transform.matrix.rotateByAbout(delta * Math.PI / 4, testObject.transform.matrix.translation)
         return
     }
     const scale = Math.pow(2, delta)
-    testObject.transform.scale = testObject.transform.scale.multiply(scale)
+    testObject.transform.matrix.setScale(testObject.transform.scale.multiply(scale))
+})
+
+window.addEventListener("click", e => {
+    if (e.shiftKey) {
+        testObject.transform.matrix.skewBy(new Vector2(-Math.PI/10, 0))
+        return
+    }
+    testObject.transform.matrix.skewBy(new Vector2(Math.PI/10, 0))
 })
