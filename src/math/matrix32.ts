@@ -1,6 +1,7 @@
 import { Vector2 } from "./vector2";
 import { Vector3 } from "./vector3";
 
+// TODO: the setters kinda break skewing and stuff like that
 export class Matrix32 {
     private _a: number;
     private _b: number;
@@ -55,12 +56,15 @@ export class Matrix32 {
         return Math.atan2(this._b, this._a);
     }
     public setRotation(theta: number) {
+        const scale = this.scale;
+
         const cos = Math.cos(theta);
         const sin = Math.sin(theta);
-        this._a = cos;
-        this._b = sin;
-        this._c = -sin;
-        this._d = cos;
+
+        this._a = cos * scale.x;
+        this._b = sin * scale.x;
+        this._c = -sin * scale.y;
+        this._d = cos * scale.y;
     }
 
     public get scale(): Vector2 {
