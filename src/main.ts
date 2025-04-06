@@ -1,12 +1,12 @@
 import './style.css'
 
-import { MainLoop, LoopHook } from './loop'
-import { FullScreenRenderer } from './renderer'
-import { Vector } from './vector'
-import { RectangularCollider } from './physics/colliders/rectangular-collider'
+import { LoopHook, MainLoop } from './loop'
+import { FullScreenRenderer, IDrawable } from './renderer'
 import { System } from './physics/system'
-import { CircularCollider } from './physics/colliders/circular-collider'
-import { clamp } from './utils'
+import { CanvasObject } from './canvas-object'
+import { Vector2 } from './math/vector2'
+import { Vector3 } from './math/vector3'
+
 
 const canvas = document.querySelector<HTMLCanvasElement>("#canvas")
 if (canvas === null) {
@@ -29,115 +29,137 @@ window.addEventListener("mousemove", (e) => {
     mousePosInCanvas.y = e.clientY - rect.top
 })
 
-class TestObject extends LoopHook {
+class TestMetricsObject extends LoopHook implements IDrawable {
     private lastFps: number[] = []
     private accumulator: number = 0
     private avgFps: number = 0
-    private ctx: CanvasRenderingContext2D
+    private dt: number = 0
+    private fdt: number = 0
 
-    constructor() {
-        super()
-        this.ctx = renderer.ctx
+    private _layer: number = 0
+
+    public get layer(): number {
+        return this._layer
     }
 
+    public set layer(value: number) {
+        this._layer = value
+    }
+    
     public update(dt: number): void {
-        this.lastFps.push(1 / dt)
+        this.lastFps.push(1 / dt || 0)
         this.accumulator += dt
-
+        
         if (this.accumulator >= 1 && this.lastFps.length > 0) {
             this.accumulator = 0
             this.avgFps = this.lastFps.reduce((a, b) => a + b, 0) / this.lastFps.length
             this.lastFps = []
         }
-
-        this.ctx.fillStyle = "white"
-        this.ctx.font = "20px Arial"
-        this.ctx.fillText(`Mouse: (${mousePosInCanvas.x}, ${mousePosInCanvas.y})`, 10, 20)
-        this.ctx.fillText(`Delta Time: ${dt.toFixed(4)}`, 10, 50)
-        this.ctx.fillText(`FPS: ${(1 / dt).toFixed(2)} (avg: ${this.avgFps.toFixed(2)})`, 10, 80)
-        this.ctx.fillText(`Canvas Size: ${renderer.width} x ${renderer.height}`, 10, 110)
+        this.dt = dt
     }
-}
 
-class TestRect extends LoopHook {
-    width: number
-    height: number
-    position: Vector
+    public fixedUpdate(fdt: number): void {
+        this.fdt = fdt
+    }
     
-    rectangularCollider: RectangularCollider
-
-    constructor(width: number, height: number, position: Vector) {
-        super()
-        this.width = width
-        this.height = height
-        this.position = position
-
-        this.rectangularCollider = new RectangularCollider(width, height, position)
-    }
-
-    public update(dt: number): void {
-        const ctx = renderer.ctx
-        ctx.fillStyle = "red"
-        ctx.fillRect(this.position.x, this.position.y, this.width, this.height)
+    draw(ctx: CanvasRenderingContext2D): void {
+        ctx.fillStyle = "white"
+        ctx.font = "20px Arial"
+        ctx.fillText(`Mouse: (${mousePosInCanvas.x}, ${mousePosInCanvas.y})`, 10, 20)
+        ctx.fillText(`Delta Time: ${this.dt}`, 10, 40)
+        ctx.fillText(`Fixed Delta Time: ${this.fdt}`, 10, 60)
+        ctx.fillText(`FPS: ${(1 / this.dt).toFixed(2)} (avg: ${this.avgFps.toFixed(2)})`, 10, 80)
+        ctx.fillText(`Canvas Size: ${renderer.width} x ${renderer.height}`, 10, 100)
     }
 }
 
-class TestCircle extends LoopHook {
-    radius: number
-    position: Vector
+class TestObject extends CanvasObject {
+    public width: number = 100
+    public height: number = 100
 
-    circularCollider: CircularCollider
+    private get mouseCenterOffset(): Vector2 {
+        return new Vector2(this.width / 2, this.height / 2)
+    }
 
-    constructor(radius: number, position: Vector) {
+    public constructor() {
         super()
-        this.radius = radius
-        this.position = position
-
-        this.circularCollider = new CircularCollider(position, radius)
+        this.transform.position = Vector2.one.multiply(0)
     }
 
     public update(dt: number): void {
-        this.position.x = mousePosInCanvas.x
-        this.position.y = mousePosInCanvas.y
+        // this.transform.position = new Vector2(mousePosInCanvas.x, mousePosInCanvas.y)
+        //     .subtract(this.mouseCenterOffset)
+    }
+}
+class TestObjectDrawer implements IDrawable {
+    private _object: TestObject
 
-        // TODO: use the transform like thing the way unity does it to make it all more universal pls
-        // and to avoid this and just pass the other class as reference
-        this.circularCollider.position = this.position
-        this.circularCollider.radius = this.radius
+    private _layer: number = 1
 
-        const ctx = renderer.ctx
-        ctx.fillStyle = "blue"
+    public get layer(): number {
+        return this._layer
+    }
+
+    public set layer(value: number) {
+        this._layer = value
+    }
+
+    constructor(object: TestObject) {
+        this._object = object
+    }
+
+    draw(ctx: CanvasRenderingContext2D): void {
+        const lbv2 = this._object.transform.matrix.translation
+        const rbv2 = this._object.transform.matrix.translation.add(new Vector2(this._object.width, 0))
+        const rtv2 = this._object.transform.matrix.translation.add(new Vector2(this._object.width, this._object.height))
+        const ltv2 = this._object.transform.matrix.translation.add(new Vector2(0, this._object.height))
+
+        const lb = this._object.transform.matrix.transformVector(new Vector3(lbv2.x, lbv2.y, 1))
+        const rb = this._object.transform.matrix.transformVector(new Vector3(rbv2.x, rbv2.y, 1))
+        const rt = this._object.transform.matrix.transformVector(new Vector3(rtv2.x, rtv2.y, 1))
+        const lt = this._object.transform.matrix.transformVector(new Vector3(ltv2.x, ltv2.y, 1))
+
+        ctx.fillStyle = "gray"
         ctx.beginPath()
-        ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2)
+
+        ctx.moveTo(lb.x, lb.y)
+        ctx.lineTo(rb.x, rb.y)
+        ctx.lineTo(rt.x, rt.y)
+        ctx.lineTo(lt.x, lt.y)
+
+        ctx.closePath()
         ctx.fill()
+        ctx.fillStyle = "white"
+        
+        this._object.transform.matrix.toString().split("\n").forEach((line, i) => {
+            ctx.fillText(line, lb.x, lb.y + 20 * (i + 1))
+        })
     }
 }
-
-window.addEventListener("wheel", (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    // change radius of the circle based on scroll delta
-    const delta = e.deltaY
-    const newRadius = clamp(testCircle.radius - delta / 20, 10, 200)
-    testCircle.radius = newRadius
-    testCircle.circularCollider.radius = testCircle.radius
-})
-
 
 renderer.init()
 
-const testObject = new TestObject()
-const testRect = new TestRect(100, 100, new Vector(400, 100))
-const testCircle = new TestCircle(50, new Vector(0, 0))
 
 mainLoop.rendererTick = renderer
 mainLoop.physicsEngineTick = physicsSystem
 
-mainLoop.addUpdateHook(testRect)
-mainLoop.addUpdateHook(testObject)
-mainLoop.addUpdateHook(testCircle)
+const testMetricsObject = new TestMetricsObject()
+renderer.addDrawable(testMetricsObject)
+mainLoop.addUpdateHook(testMetricsObject)
 
-physicsSystem.addCollider(testRect.rectangularCollider)
-physicsSystem.addCollider(testCircle.circularCollider)
+const testObject = new TestObject()
+const testObjectDrawer = new TestObjectDrawer(testObject)
+renderer.addDrawable(testObjectDrawer)
+mainLoop.addUpdateHook(testObject)
 
 mainLoop.start()
+
+window.addEventListener("wheel", e => {
+    const delta = Math.sign(e.deltaY)
+    if (e.altKey) {
+        testObject.transform.matrix.rotateBy(delta * Math.PI / 180)
+        return
+    }
+    const scale = Math.pow(2, delta)
+    testObject.transform.scale = testObject.transform.scale.multiply(scale)
+})

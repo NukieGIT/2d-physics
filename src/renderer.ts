@@ -10,6 +10,9 @@ export class Renderer implements IRendererTick {
     private _width: number = 0
     private _height: number = 0
 
+    protected _drawables: IDrawable[] = []
+    private _areDrawablesDirty: boolean = true
+
     public get width(): number {
         return this._width
     }
@@ -25,25 +28,59 @@ export class Renderer implements IRendererTick {
         this.canvas.height = value
     }
 
-    public get canvasElement(): HTMLCanvasElement {
+    public addDrawable(drawable: IDrawable): number {
+        const idx = this._drawables.length - 1
+        this._drawables.push(drawable)
+        this.makeDrawablesDirty()
+        return idx
+    }
+
+    public removeDrawable(drawable: IDrawable): void {
+        const index = this._drawables.indexOf(drawable)
+        if (index !== -1) {
+            this._drawables.splice(index, 1)
+            this.makeDrawablesDirty()
+        }
+    }
+
+    public removeDrawableByIndex(index: number): void {
+        if (index >= 0 && index < this._drawables.length) {
+            this._drawables.splice(index, 1)
+            this.makeDrawablesDirty()
+        }
+    }
+
+    private makeDrawablesDirty() {
+        this._areDrawablesDirty = true
+    }
+
+    protected get canvasElement(): HTMLCanvasElement {
         return this.canvas
     }
     
-    public get ctx(): CanvasRenderingContext2D {
+    protected get ctx(): CanvasRenderingContext2D {
         if (this._ctx === undefined) {
             throw new Error("Context not initialized")
         }
         return this._ctx
     }
 
-    constructor(canvas: HTMLCanvasElement, width: number, height: number) {
+    public constructor(canvas: HTMLCanvasElement, width: number, height: number) {
         this.canvas = canvas
         this.width = width
         this.height = height
     }
 
-    tick(): void {
+    public tick(): void {
         this.clear()
+        if (this._areDrawablesDirty) {
+            this._drawables.sort((a, b) => b.layer - a.layer)
+            this._areDrawablesDirty = false
+        }
+
+        for (const drawable of this._drawables) {
+            drawable.draw(this.ctx)
+        }
     }
 
     public init() {
@@ -54,7 +91,7 @@ export class Renderer implements IRendererTick {
         this._ctx = ctx
     }
 
-    private clear() {
+    protected clear() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
     }
 }
@@ -82,4 +119,10 @@ export class FullScreenRenderer extends Renderer {
         this.width = FullScreenRenderer.documentWidth
         this.height = FullScreenRenderer.documentHeight
     }
+}
+
+export interface IDrawable {
+    get layer(): number
+    set layer(value: number)
+    draw(ctx: CanvasRenderingContext2D): void
 }
