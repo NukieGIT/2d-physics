@@ -137,12 +137,12 @@ export class Matrix32 {
         const tx = this._tx;
         const ty = this._ty;
 
-        this._a = a * m._a + b * m._c
-        this._b = a * m._b + b * m._d
-        this._c = c * m._a + d * m._c
-        this._d = c * m._b + d * m._d
-        this._tx = tx * m._a + ty * m._c + m._tx
-        this._ty = tx * m._b + ty * m._d + m._ty
+        this._a = a * m._a + b * m._c;
+        this._b = a * m._b + b * m._d;
+        this._c = c * m._a + d * m._c;
+        this._d = c * m._b + d * m._d;
+        this._tx = a * m._tx + b * m._ty + tx;
+        this._ty = c * m._tx + d * m._ty + ty;
 
         return this;
     }
