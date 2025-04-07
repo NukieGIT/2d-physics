@@ -96,6 +96,10 @@ class TestObjectDrawer implements IDrawable {
 
     private _layer: number = 1
 
+    private vertices: Vector3[]
+
+    private _centerOfMass: Vector2 = Vector2.zero;
+
     public get layer(): number {
         return this._layer
     }
@@ -106,17 +110,25 @@ class TestObjectDrawer implements IDrawable {
 
     constructor(object: TestObject) {
         this._object = object
-    }
-
-    draw(ctx: CanvasRenderingContext2D): void {
-        const vertices = [
+        this.vertices = [
             new Vector3(0, 0, 1),
             new Vector3(this._object.width, 0, 1),
             new Vector3(this._object.width, this._object.height, 1),
             new Vector3(0, this._object.height, 1)
-        ];
+        ]
 
-        const transformedVertices = vertices.map(v => 
+        this.vertices.forEach(v => {
+            this._centerOfMass = this._centerOfMass.add(new Vector2(v.x, v.y))
+        })
+        this._centerOfMass = this._centerOfMass.divide(this.vertices.length)
+
+        for (let i = 0; i < this.vertices.length; i++) {
+            this.vertices[i] = this.vertices[i].subtract(new Vector3(this._centerOfMass.x, this._centerOfMass.y, 0))
+        }
+    }
+
+    draw(ctx: CanvasRenderingContext2D): void {
+        const transformedVertices = this.vertices.map(v => 
             this._object.transform.matrix.transformVector(v)
         );
 
@@ -158,7 +170,8 @@ mainLoop.start()
 window.addEventListener("wheel", e => {
     const delta = Math.sign(e.deltaY)
     if (!e.shiftKey) {
-        testObject.transform.matrix.rotateByAbout(delta * Math.PI / 4, testObject.transform.matrix.translation)
+        // testObject.transform.matrix.rotateBy(delta * Math.PI / 10);
+        testObject.transform.matrix.rotateAroundPoint(delta * Math.PI / 4, Vector2.one.multiply(0))
         return
     }
     const scale = Math.pow(2, delta)

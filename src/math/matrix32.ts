@@ -136,14 +136,14 @@ export class Matrix32 {
         const d = this._d;
         const tx = this._tx;
         const ty = this._ty;
-
+    
         this._a = a * m._a + b * m._c;
         this._b = a * m._b + b * m._d;
         this._c = c * m._a + d * m._c;
         this._d = c * m._b + d * m._d;
         this._tx = a * m._tx + b * m._ty + tx;
         this._ty = c * m._tx + d * m._ty + ty;
-
+    
         return this;
     }
 
@@ -169,12 +169,21 @@ export class Matrix32 {
         return this;
     }
 
-    public rotateByAbout(theta: number, origin: Vector2) : Matrix32 {
-        this.translate(origin.multiply(-1))        
-        this.rotateBy(theta)
-        this.translate(origin)
-
-        return this;
+    // afaik currently the point is relative to the current position of the object
+    // so point (0, 0) is the in object space and not the world space
+    public rotateAroundPoint(theta: number, point: Vector2): Matrix32 {
+        const toOrigin = new Matrix32(1, 0, 0, 1, -point.x, -point.y);
+        
+        const cos = Math.cos(theta);
+        const sin = Math.sin(theta);
+        const rotation = new Matrix32(cos, sin, -sin, cos, 0, 0);
+        
+        const fromOrigin = new Matrix32(1, 0, 0, 1, point.x, point.y);
+        
+        return this
+            .multiplyBy(toOrigin)
+            .multiplyBy(rotation)
+            .multiplyBy(fromOrigin);
     }
 
     public rotateBy(theta: number): Matrix32 {
