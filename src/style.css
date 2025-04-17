@@ -1,31 +1,25 @@
 *,
 *::after,
 *::before {
-  box-sizing: border-box;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  font: inherit;
+    box-sizing: border-box;
 }
 
 html {
-  color-scheme: light dark;
+    color-scheme: light dark;
 }
 
 body {
-  min-height: 100svh;
+    margin: 0;
 }
 
 img,
 picture,
 svg,
 video {
-  display: block;
-  max-width: 100%;
+    display: block;
+    max-width: 100%;
 }
 
 canvas {
-  display: block;
+    display: block;
 }

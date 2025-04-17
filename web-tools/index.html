@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tools</title>
+  </head>
+  <body>
+    <div id="app">
+        <h1>Tools</h1>
+        <h2>Generate Matrix Multiplication</h2>
+        <p>
+            <kbd>scroll</kbd> = rows, <kbd>shift</kbd> + <kbd>scroll</kbd> = cols
+        </p>
+        <label>Number of matrices:</label>
+        <input type="number" id="matrix-count" placeholder="Number of matrices" min="2" value="2" />
+        <hr>
+        <div id="matrices-container" class="matrices-container"></div>
+        <hr>
+        <button id="generate-matrix">Generate</button>
+        <div id="results-container" class="matrices-container"></div>
+    </div>
+    <script type="module" src="/src/tools/web-tools-main.ts"></script>
+  </body>
+</html>

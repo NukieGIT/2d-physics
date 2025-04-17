@@ -1,0 +1,63 @@
+*,
+*::after,
+*::before {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html {
+    color-scheme: light dark;
+}
+
+body {
+    margin: 0;
+}
+
+img,
+picture,
+svg,
+video {
+    display: block;
+    max-width: 100%;
+}
+
+canvas {
+    display: block;
+}
+
+.matrices-container {
+    display: flex;
+    align-items: space;
+    justify-content: space-evenly;
+    flex-wrap: wrap;
+    gap: 30px;
+}
+
+.matrix-input {
+    width: 60px;
+}
+
+.matrix-result {
+    outline: 1px solid #797979;
+    display: inline-block;
+    padding: 10px;
+    overflow-x: scroll;
+}
+
+kbd {
+    --side-color: rgb(76, 44, 134);
+    position: relative;
+    display: inline-block;
+    font-size: 0.75em;
+    border-radius: 0.25rem;
+    padding: 2px 4px;
+    background-color: rgb(116, 89, 167);
+    border: 1px solid var(--side-color);
+    box-shadow: 0 3px 0 0px var(--side-color);
+    cursor: default;
+}
+
+kbd:hover {
+    top: 2px;
+    box-shadow: 0 1px 0 0px var(--side-color);
+}

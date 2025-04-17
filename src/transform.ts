@@ -1,18 +1,22 @@
 import { CanvasObject } from "./canvas-object";
 import { Component } from "./component";
-import { Matrix32 } from "./math/matrix32";
+import { Matrix3x3 } from "./math/matrix3x3";
 import { Vector2 } from "./math/vector2";
 
 export class Transform extends Component {
-    private _matrix: Matrix32;
+    private _matrix: Matrix3x3;
 
     constructor(parent: CanvasObject, position: Vector2, rotation: number = 0, scale: Vector2 = Vector2.one) {
         super(parent)
-        this._matrix = Matrix32.fromEuclideanTransform(position, rotation, scale);
+        this._matrix = Matrix3x3.fromEuclidean(position, rotation, scale);
     }
 
-    get matrix(): Matrix32 {
+    get localToWorldMatrix(): Matrix3x3 {
         return this._matrix;
+    }
+
+    get worldToLocalMatrix(): Matrix3x3 {
+        return this._matrix.inverted();
     }
 
     get position(): Vector2 {
