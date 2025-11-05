@@ -170,6 +170,60 @@ class TestObjectDrawer implements IDrawable<CanvasRenderingContext2D> {
     }
 }
 
+class GridObject extends CanvasObject implements IDrawable<CanvasRenderingContext2D> {
+    public cellSize: number = 50
+    public lineColor: string = "rgba(255, 255, 255, 0.2)"
+    public rotationPoint: Vector2 = Vector2.zero;
+
+    private vertices: Vector2[][] = []
+
+    constructor() {
+        super()
+        
+        const halfWidth = 2000
+        const halfHeight = 2000
+
+        for (let x = -halfWidth; x < halfWidth; x += this.cellSize) {
+            for (let y = -halfHeight; y < halfHeight; y += this.cellSize) {
+                const sqr = []
+                sqr.push(new Vector2(x, y))
+                sqr.push(new Vector2(x + this.cellSize, y))
+                sqr.push(new Vector2(x + this.cellSize, y + this.cellSize))
+                sqr.push(new Vector2(x, y + this.cellSize))
+                this.vertices.push(sqr)
+            }
+        }
+    }
+
+    private _layer: number = -1
+
+    get layer(): number {
+        return this._layer
+    }
+    set layer(value: number) {
+        this._layer = value
+    }
+
+    draw(ctx: CanvasRenderingContext2D): void {
+        const transformedVertices = this.vertices.map(v =>
+            v.map(v => this.transform.localToWorldMatrix.multiplyPoint(v))
+        );
+
+        ctx.strokeStyle = this.lineColor;
+        ctx.lineWidth = 1;
+
+        ctx.moveTo(transformedVertices[0][0].x, transformedVertices[0][0].y);
+        for (let i = 1; i < transformedVertices.length; i++) {
+            ctx.beginPath();
+            for (const vertex of transformedVertices[i]) {
+                ctx.lineTo(vertex.x, vertex.y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+    }
+}
+
 renderer.init()
 
 
@@ -185,6 +239,10 @@ const testObjectDrawer = new TestObjectDrawer(testObject)
 renderer.addDrawable(testObjectDrawer)
 mainLoop.addUpdateHook(testObject)
 
+const gridObject = new GridObject()
+renderer.addDrawable(gridObject)
+mainLoop.addUpdateHook(gridObject)
+
 mainLoop.start()
 
 window.addEventListener("wheel", e => {
@@ -192,21 +250,26 @@ window.addEventListener("wheel", e => {
     if (!e.shiftKey) {
         // testObject.transform.matrix.rotateBy(delta * Math.PI / 10);
         testObject.transform.localToWorldMatrix.rotateAroundPoint(delta * Math.PI / 10, testObject.rotationPoint)
+        gridObject.transform.localToWorldMatrix.rotateAroundPoint(delta * Math.PI / 10, gridObject.rotationPoint)
         return
     }
     const scale = Math.pow(2, delta)
     testObject.transform.localToWorldMatrix.setScale(testObject.transform.scale.multiply(scale))
+    gridObject.transform.localToWorldMatrix.setScale(gridObject.transform.scale.multiply(scale))
 })
 
 window.addEventListener("contextmenu", e => {
     e.preventDefault();
     if (e.ctrlKey) {
         testObject.transform.localToWorldMatrix.skewBy(new Vector2(-Math.PI / 10, 0))
+        gridObject.transform.localToWorldMatrix.skewBy(new Vector2(-Math.PI / 10, 0))
         return
     }
     testObject.transform.localToWorldMatrix.skewBy(new Vector2(Math.PI / 10, 0))
+    gridObject.transform.localToWorldMatrix.skewBy(new Vector2(Math.PI / 10, 0))
 })
 
 window.addEventListener("click", () => {
     testObject.rotationPoint = new Vector2(mousePosInCanvas.x, mousePosInCanvas.y)
+    gridObject.rotationPoint = new Vector2(mousePosInCanvas.x, mousePosInCanvas.y)
 })
