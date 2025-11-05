@@ -8,7 +8,7 @@ export class Renderer implements IRendererTick {
     private _width: number = 0
     private _height: number = 0
 
-    protected _drawables: IDrawable[] = []
+    protected _drawables: IDrawable<CanvasRenderingContext2D>[] = []
     private _isDrawableOrderDirty: boolean = true
 
     public get width(): number {
@@ -26,14 +26,14 @@ export class Renderer implements IRendererTick {
         this.canvas.height = value
     }
 
-    public addDrawable(drawable: IDrawable): number {
+    public addDrawable(drawable: IDrawable<CanvasRenderingContext2D>): number {
         const idx = this._drawables.length - 1
         this._drawables.push(drawable)
         this.makeDrawableOrderDirty()
         return idx
     }
 
-    public removeDrawable(drawable: IDrawable): void {
+    public removeDrawable(drawable: IDrawable<CanvasRenderingContext2D>): void {
         const index = this._drawables.indexOf(drawable)
         if (index !== -1) {
             this._drawables.splice(index, 1)
@@ -119,8 +119,8 @@ export class FullScreenRenderer extends Renderer {
     }
 }
 
-export interface IDrawable {
+export interface IDrawable<TApi> {
     get layer(): number
     set layer(value: number)
-    draw(ctx: CanvasRenderingContext2D): void
+    draw(api: TApi): void
 }

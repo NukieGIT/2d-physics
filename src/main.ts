@@ -28,7 +28,7 @@ window.addEventListener("mousemove", (e) => {
     mousePosInCanvas.y = e.clientY - rect.top
 })
 
-class TestMetricsObject extends LoopHook implements IDrawable {
+class TestMetricsObject extends LoopHook implements IDrawable<CanvasRenderingContext2D> {
     private lastFps: number[] = []
     private accumulator: number = 0
     private avgFps: number = 0
@@ -82,7 +82,7 @@ class TestObject extends CanvasObject {
         this.transform.position = Vector2.one.multiply(200)
     }
 }
-class TestObjectDrawer implements IDrawable {
+class TestObjectDrawer implements IDrawable<CanvasRenderingContext2D> {
     private _object: TestObject
 
     private _layer: number = 1
