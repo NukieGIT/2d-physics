@@ -1,4 +1,5 @@
 import { lerp } from "../utils.ts";
+import { Vector3 } from "./vector3.ts";
 
 export class Vector2 {
     private _x: number
@@ -101,5 +102,12 @@ export class Vector2 {
 	angle(): number {
 		return Math.atan2(this.y, this.x)
 	}
+    
+    equals(vector: Vector2): boolean {
+        return this.x === vector.x && this.y === vector.y
+    }
 
+    equalsVec3(vector: Vector3): boolean {
+        return this.x === vector.x && this.y === vector.y
+    }
 }

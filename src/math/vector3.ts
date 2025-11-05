@@ -1,4 +1,5 @@
 import { lerp } from "../utils.ts";
+import { Vector2 } from "./vector2.ts";
 
 // TODO: finish this class
 export class Vector3 {
@@ -108,5 +109,13 @@ export class Vector3 {
 
     dot(vector: Vector3): number {
         return this.x * vector.x + this.y * vector.y + this.z * vector.z
+    }
+
+    equals(vector: Vector3): boolean {
+        return this.x === vector.x && this.y === vector.y && this.z === vector.z
+    }
+
+    equalsVec2(vector: Vector2): boolean {
+        return this.x === vector.x && this.y === vector.y
     }
 }
