@@ -273,3 +273,9 @@ window.addEventListener("click", () => {
     testObject.rotationPoint = new Vector2(mousePosInCanvas.x, mousePosInCanvas.y)
     gridObject.rotationPoint = new Vector2(mousePosInCanvas.x, mousePosInCanvas.y)
 })
+
+window.addEventListener("keydown", e => {
+    if (e.key === "t") {
+        
+    }
+})

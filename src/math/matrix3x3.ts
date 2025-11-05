@@ -119,17 +119,6 @@ export class Matrix3x3 {
         this._m23 = value.y;
     }
 
-    public get skew(): Vector2 {
-        return new Vector2(Math.atan2(this._m12, this._m11), Math.atan2(this._m21, this._m22));
-    }
-    public setSkew(value: Vector2) {
-        const currentSkew = this.skew;
-        if (currentSkew.x !== 0 && currentSkew.y !== 0) {
-            this._m12 *= value.x / currentSkew.x;
-            this._m21 *= value.y / currentSkew.y;
-        }
-    }
-
     public isIdentity(): boolean {
         return this._m11 === 1 && this._m12 === 0 && this._m13 === 0 &&
             this._m21 === 0 && this._m22 === 1 && this._m23 === 0 &&
@@ -254,6 +243,7 @@ export class Matrix3x3 {
         return this;
     }
 
+    // TODO: this is most likely incorrect
     public skewBy(v: Vector2): Matrix3x3 {
         const tanX = Math.tan(v.x);
         const tanY = Math.tan(v.y);

@@ -69,6 +69,7 @@ export class Renderer implements IRendererTick {
         this.height = height
     }
 
+    // TODO: fix draw order not updating upon layer change (some kind of watcher?)
     public tick(): void {
         this.clear()
         if (this._isDrawableOrderDirty) {
