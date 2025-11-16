@@ -16,12 +16,13 @@ export class Transform extends Component {
     }
 
     get worldToLocalMatrix(): Matrix3x3 {
-        return this._matrix.inverted();
+        return this._matrix.clone().invert();
     }
 
     get position(): Vector2 {
-        return new Vector2(this._matrix.tx, this._matrix.ty);
+        return new Vector2(this._matrix.m13, this._matrix.m23);
     }
+    
     set position(value: Vector2) {
         this._matrix.translation = value;
     }
