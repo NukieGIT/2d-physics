@@ -59,7 +59,6 @@ export class Renderer implements IRendererTick {
     }
 
     private onDrawableLayerChange(_e: CustomEvent) {
-        console.log("changed order", _e.detail);
         this.makeDrawableOrderDirty()
     }
 
@@ -84,7 +83,7 @@ export class Renderer implements IRendererTick {
     public tick(): void {
         this.clear()
         if (this._isDrawableOrderDirty) {
-            this._drawables.sort((a, b) => b.layer - a.layer)
+            this._drawables.sort((a, b) => a.layer - b.layer)
             this._isDrawableOrderDirty = false
         }
 
