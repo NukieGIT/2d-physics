@@ -1,7 +1,7 @@
 import './style.css'
 
 import { LoopHook, MainLoop } from './loop'
-import { FullScreenRenderer, IDrawable } from './renderer'
+import { Drawable, FullScreenRenderer } from './renderer'
 import { System } from './physics/system'
 import { CanvasObject } from './canvas-object'
 import { Vector2 } from './math/vector2'
@@ -28,22 +28,12 @@ window.addEventListener("mousemove", (e) => {
     mousePosInCanvas.y = e.clientY - rect.top
 })
 
-class TestMetricsObject extends LoopHook implements IDrawable<CanvasRenderingContext2D> {
-    private lastFps: number[] = []
-    private accumulator: number = 0
-    private avgFps: number = 0
-    private dt: number = 0
-    private fdt: number = 0
-
-    private _layer: number = 0
-
-    public get layer(): number {
-        return this._layer
-    }
-
-    public set layer(value: number) {
-        this._layer = value
-    }
+class TestMetricsObject extends LoopHook {
+    public lastFps: number[] = []
+    public accumulator: number = 0
+    public avgFps: number = 0
+    public dt: number = 0
+    public fdt: number = 0
 
     public update(dt: number): void {
         this.lastFps.push(1 / dt || 0)
@@ -60,14 +50,25 @@ class TestMetricsObject extends LoopHook implements IDrawable<CanvasRenderingCon
     public fixedUpdate(fdt: number): void {
         this.fdt = fdt
     }
+    
+}
 
+class TestMetricsObjectDrawer extends Drawable<CanvasRenderingContext2D> {
+    private _object: TestMetricsObject
+
+    constructor(object: TestMetricsObject) {
+        super()
+        this.layer = 0
+        this._object = object
+    }
+    
     draw(ctx: CanvasRenderingContext2D): void {
         ctx.fillStyle = "white"
         ctx.font = "20px Arial"
         ctx.fillText(`Mouse: (${mousePosInCanvas.x}, ${mousePosInCanvas.y})`, 10, 20)
-        ctx.fillText(`Delta Time: ${this.dt}`, 10, 40)
-        ctx.fillText(`Fixed Delta Time: ${this.fdt}`, 10, 60)
-        ctx.fillText(`FPS: ${(1 / this.dt).toFixed(2)} (avg: ${this.avgFps.toFixed(2)})`, 10, 80)
+        ctx.fillText(`Delta Time: ${this._object.dt}`, 10, 40)
+        ctx.fillText(`Fixed Delta Time: ${this._object.fdt}`, 10, 60)
+        ctx.fillText(`FPS: ${(1 / this._object.dt).toFixed(2)} (avg: ${this._object.avgFps.toFixed(2)})`, 10, 80)
         ctx.fillText(`Canvas Size: ${renderer.width} x ${renderer.height}`, 10, 100)
     }
 }
@@ -82,24 +83,16 @@ class TestObject extends CanvasObject {
         this.transform.position = Vector2.one.multiply(200)
     }
 }
-class TestObjectDrawer implements IDrawable<CanvasRenderingContext2D> {
+class TestObjectDrawer extends Drawable<CanvasRenderingContext2D> {
     private _object: TestObject
-
-    private _layer: number = 1
 
     private vertices: Vector2[]
 
     private _centerOfMass: Vector2 = Vector2.zero;
 
-    public get layer(): number {
-        return this._layer
-    }
-
-    public set layer(value: number) {
-        this._layer = value
-    }
-
     constructor(object: TestObject) {
+        super()
+        this.layer = 1
         this._object = object
         this.vertices = [
             new Vector2(0, 0),
@@ -170,12 +163,11 @@ class TestObjectDrawer implements IDrawable<CanvasRenderingContext2D> {
     }
 }
 
-class GridObject extends CanvasObject implements IDrawable<CanvasRenderingContext2D> {
+class GridObject extends CanvasObject {
     public cellSize: number = 50
-    public lineColor: string = "rgba(255, 255, 255, 0.2)"
     public rotationPoint: Vector2 = Vector2.zero;
 
-    private vertices: Vector2[][] = []
+    public vertices: Vector2[][] = []
 
     constructor() {
         super()
@@ -194,24 +186,26 @@ class GridObject extends CanvasObject implements IDrawable<CanvasRenderingContex
             }
         }
     }
+}
 
-    private _layer: number = -1
+class GridObjectDrawer extends Drawable<CanvasRenderingContext2D> {
+    private _object: GridObject
+    public lineColor: string = "rgba(255, 255, 255, 0.2)"
 
-    get layer(): number {
-        return this._layer
-    }
-    set layer(value: number) {
-        this._layer = value
+    constructor(object: GridObject) {
+        super()
+        this.layer = 0
+        this._object = object
     }
 
     draw(ctx: CanvasRenderingContext2D): void {
-        const transformedVertices = this.vertices.map(v =>
-            v.map(v => this.transform.localToWorldMatrix.multiplyPoint(v))
+        const transformedVertices = this._object.vertices.map(v =>
+            v.map(v => this._object.transform.localToWorldMatrix.multiplyPoint(v))
         );
-
+    
         ctx.strokeStyle = this.lineColor;
         ctx.lineWidth = 1;
-
+    
         ctx.moveTo(transformedVertices[0][0].x, transformedVertices[0][0].y);
         for (let i = 1; i < transformedVertices.length; i++) {
             ctx.beginPath();
@@ -231,7 +225,8 @@ mainLoop.rendererTick = renderer
 mainLoop.physicsEngineTick = physicsSystem
 
 const testMetricsObject = new TestMetricsObject()
-renderer.addDrawable(testMetricsObject)
+const testMetricsObjectDrawer = new TestMetricsObjectDrawer(testMetricsObject)
+renderer.addDrawable(testMetricsObjectDrawer)
 mainLoop.addUpdateHook(testMetricsObject)
 
 const testObject = new TestObject()
@@ -240,7 +235,8 @@ renderer.addDrawable(testObjectDrawer)
 mainLoop.addUpdateHook(testObject)
 
 const gridObject = new GridObject()
-renderer.addDrawable(gridObject)
+const gridObjectDrawer = new GridObjectDrawer(gridObject)
+renderer.addDrawable(gridObjectDrawer)
 mainLoop.addUpdateHook(gridObject)
 
 mainLoop.start()
@@ -276,6 +272,6 @@ window.addEventListener("click", () => {
 
 window.addEventListener("keydown", e => {
     if (e.key === "t") {
-        
+        testObjectDrawer.layer = 10
     }
 })
