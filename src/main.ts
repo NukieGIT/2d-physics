@@ -58,7 +58,7 @@ class TestMetricsObjectDrawer extends Drawable<CanvasRenderingContext2D> {
 
     constructor(object: TestMetricsObject) {
         super()
-        this.layer = 0
+        this.layer = 9999
         this._object = object
     }
     
@@ -272,6 +272,6 @@ window.addEventListener("click", () => {
 
 window.addEventListener("keydown", e => {
     if (e.key === "t") {
-        testObjectDrawer.layer = 10
+        testObjectDrawer.layer = -10
     }
 })
